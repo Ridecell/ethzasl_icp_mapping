@@ -7,3 +7,7 @@
     descName: probabilityStatic
     useLargerThan: 0
     threshold: 0.1
+#- MaxDensityDataPointsFilter:
+#    maxDensity: 50
+#- MaxPointCountDataPointsFilter:
+#    maxCount: 600000

@@ -9,10 +9,11 @@ nav_msgs
 tf
 tf_conversions
 eigen_conversions
+libpointmatcher
 )
 
 # This was tested for a system install of libpointmatcher
-find_package(libpointmatcher CONFIG)
+# find_package(libpointmatcher CONFIG)
 
 
 catkin_package(

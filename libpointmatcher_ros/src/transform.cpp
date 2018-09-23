@@ -52,11 +52,12 @@ namespace PointMatcher_ros
 	//--------------------------------
 	// Eigen to Odom
 	template<typename T>
-	nav_msgs::Odometry eigenMatrixToOdomMsg(const typename PointMatcher<T>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp)
+	nav_msgs::Odometry eigenMatrixToOdomMsg(const typename PointMatcher<T>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp, const std::string& child_id)
 	{
 		nav_msgs::Odometry odom;
 		odom.header.stamp = stamp;
 		odom.header.frame_id = frame_id;
+		odom.child_frame_id = child_id;
 		
 		// Fill pose
 		const Eigen::Affine3d eigenTr(
@@ -81,9 +82,9 @@ namespace PointMatcher_ros
 	}
 	
 	template
-	nav_msgs::Odometry eigenMatrixToOdomMsg<float>(const PointMatcher<float>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp);
+	nav_msgs::Odometry eigenMatrixToOdomMsg<float>(const PointMatcher<float>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp, const std::string& child_id);
 	template
-	nav_msgs::Odometry eigenMatrixToOdomMsg<double>(const PointMatcher<double>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp);
+	nav_msgs::Odometry eigenMatrixToOdomMsg<double>(const PointMatcher<double>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp, const std::string& child_id);
 	
 	
 	//--------------------------------
@@ -143,6 +144,7 @@ namespace PointMatcher_ros
 			)
 		);
 		tf::transformEigenToTF(eigenTr, tfTr);
+		tfTr.setRotation( tfTr.getRotation().normalized() );
 		return tfTr;
 	}
 	

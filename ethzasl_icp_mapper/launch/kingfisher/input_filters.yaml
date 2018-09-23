@@ -2,5 +2,8 @@
 - SurfaceNormalDataPointsFilter:
     knn: 3
     keepNormals: 1
+#    keepDensities: 1
+#- MaxDensityDataPointsFilter:
+#    maxDensity: 10000
 - ObservationDirectionDataPointsFilter
 - OrientNormalsDataPointsFilter 

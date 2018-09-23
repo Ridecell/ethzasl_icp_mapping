@@ -32,7 +32,7 @@ namespace PointMatcher_ros
 
 	// Eigen to Odom
 	template<typename T>
-	nav_msgs::Odometry eigenMatrixToOdomMsg(const typename PointMatcher<T>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp);
+	nav_msgs::Odometry eigenMatrixToOdomMsg(const typename PointMatcher<T>::TransformationParameters& inTr, const std::string& frame_id, const ros::Time& stamp, const std::string& child_id = "");
 
 	// Eigen to Pose
 	template<typename T>

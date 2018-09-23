@@ -21,5 +21,7 @@ wget http://pr.willowgarage.com/data/gmapping/small_loop_prf.bag
 		<param name="maxOverlapToMerge" value="0.9" /> 
 		<param name="minMapPointCount" value="1000" /> 
 		<param name="minReadingPointCount" value="150" /> 
+		<param name="localizing" value="true" /> 
+		<param name="mapping" value="true" /> 
 	</node>
 </launch>
