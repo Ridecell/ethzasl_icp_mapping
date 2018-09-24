@@ -522,11 +522,8 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 	// Recuring need to see those transformations...
 	ROS_DEBUG_STREAM("[ICP] T_odom_to_scanner(" << odomFrame<< " to " << scannerFrame << "):\n" << T_odom_to_scanner);
 	ROS_DEBUG_STREAM("[ICP] T_odom_to_map(" << odomFrame<< " to " << mapFrame << "):\n" << T_odom_to_map);
-    	ROS_DEBUG_STREAM("[ICP] T_robot_to_scanner(" << robotFrame<< " to " << scannerFrame << "):\n" << T_robot_to_scanner);
+   	ROS_DEBUG_STREAM("[ICP] T_robot_to_scanner(" << robotFrame<< " to " << scannerFrame << "):\n" << T_robot_to_scanner);
 	ROS_DEBUG_STREAM("[ICP] T_robot_to_map(" << robotFrame<< " to " << mapFrame << "):\n" << T_robot_to_map);
-	ROS_DEBUG_STREAM("[ICP] T_scanner_to_map (" << scannerFrame << " to " << mapFrame << "):\n" << T_scanner_to_map);
-		
-	const PM::TransformationParameters T_scanner_to_map = T_odom_to_map * T_odom_to_scanner.inverse();
 	ROS_DEBUG_STREAM("[ICP] T_scanner_to_map (" << scannerFrame << " to " << mapFrame << "):\n" << T_scanner_to_map);
 
 	const PM::TransformationParameters T_scanner_to_localMap = transformation->correctParameters(T_localMap_to_map.inverse() * T_scanner_to_map);
@@ -562,7 +559,7 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 		PM::TransformationParameters T_updatedScanner_to_map;
 		PM::TransformationParameters T_updatedScanner_to_localMap;
 		
-		ROS_INFO_STREAM("[ICP] Computing - reading: " << newPointCloud->getNbPoints() << ", reference: " << icp.getInternalMap().getNbPoints() );
+		ROS_INFO_STREAM("[ICP] Computing - reading: " << newPointCloud->getNbPoints() << ", reference: " << icp.getPrefilteredInternalMap().getNbPoints() );
 		//T_updatedScanner_to_map = icp(*newPointCloud, T_scanner_to_map);
 		icpMapLock.lock();
 		T_updatedScanner_to_localMap = icp(*newPointCloud, T_scanner_to_localMap);
@@ -649,7 +646,7 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 		{
 			cerr << "SKIPPING MAP" << endl;
 			cerr << "estimatedOverlap < maxOverlapToMerge: " << (estimatedOverlap < maxOverlapToMerge) << endl;
-			cerr << "(icp.getInternalMap().features.cols() < minMapPointCount): " << icp.getInternalMap().features.cols() << " < " << minMapPointCount << " = " << (icp.getInternalMap().features.cols() < minMapPointCount) << endl;
+			cerr << "(icp.getPrefilteredInternalMap().features.cols() < minMapPointCount): " << icp.getPrefilteredInternalMap().features.cols() << " < " << minMapPointCount << " = " << (icp.getPrefilteredInternalMap().features.cols() < minMapPointCount) << endl;
 			cerr << "mapBuildingInProgress: " << mapBuildingInProgress << endl;
 			
 			bool stateLock = publishLock.try_lock();
@@ -1053,14 +1050,14 @@ Mapper::DP* Mapper::updateMap(DP* newPointCloud, const PM::TransformationParamet
 		return mapPointCloud;
 		// abort(); //TODO: remove hack added to continue mapping
 	}
-	catch (const std::exception &exc)
+	catch (const std::exception &e)
 	{
 		// catch anything thrown within try block that derives from std::exception
 		
 		ROS_ERROR_STREAM("[MAP] " << e.what());
 		return mapPointCloud;
 
-		//std::cerr << exc.what();
+		//std::cerr << e.what();
 		//abort();//TODO: remove hack added to continue mapping
 	}
 	
