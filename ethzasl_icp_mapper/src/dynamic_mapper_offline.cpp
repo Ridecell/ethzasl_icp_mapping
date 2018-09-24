@@ -684,7 +684,7 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud,
   } catch (PM::ConvergenceError error) {
     ROS_ERROR_STREAM("[ICP] failed to converge: " << error.what());
     newPointCloud->save(filePath + "/" + "error_read.vtk");
-    icp.getMap().save(filePath + "/" + "error_ref.vtk");
+    icp.getPrefilteredMap().save(filePath + "/" + "error_ref.vtk");
     return;
   }
 
