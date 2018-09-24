@@ -1,0 +1,6 @@
+- git:
+    local-name: libnabo
+    uri: git@github.com:Ridecell/libnabo.git
+- git:
+    local-name: libpointmatcher
+    uri: git@github.com:Ridecell/libpointmatcher.git

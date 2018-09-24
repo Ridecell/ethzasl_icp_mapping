@@ -105,7 +105,3 @@ add_executable(dynamic_trails src/dynamic_trails.cpp )
 add_dependencies(dynamic_trails ${PROJECT_NAME}_gencpp)
 target_link_libraries(dynamic_trails ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
 
-
-add_executable(dynamic_mapper_offline src/dynamic_mapper_offline.cpp )
-add_dependencies(dynamic_mapper_offline ${PROJECT_NAME}_gencpp)
-target_link_libraries(dynamic_mapper_offline ${catkin_LIBRARIES} ${libpointmatcher_LIBRARIES})
