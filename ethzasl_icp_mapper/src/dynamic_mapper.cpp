@@ -36,6 +36,12 @@
 #include "ethzasl_icp_mapper/GetMode.h"
 #include "ethzasl_icp_mapper/GetBoundedMap.h" // FIXME: should that be moved to map_msgs?
 
+//For Offline Bag
+#include <boost/foreach.hpp>
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+#include <sstream>
+
 using namespace std;
 using namespace PointMatcherSupport;
 
@@ -100,7 +106,7 @@ class Mapper
 	#endif // BOOST_VERSION >= 104100
 	bool processingNewCloud; 
 
-	// Parameters
+  // Parameters
 	bool publishMapTf; 
 	bool useConstMotionModel; 
 	bool localizing;
@@ -149,11 +155,25 @@ class Mapper
 	tf::TransformBroadcaster tfBroadcaster;
 
 	const float eps;
-	
+
+	//  For Offline Bagfile mode
+	std::string bag_filename;
+	rosbag::Bag bag;
+	bool bag_file_mode;
+	int bag_file_stepping;
+	int bag_file_step = 0;
+	int bag_file_interleave_step = 0;
+	int bag_file_interleave;
+	int bag_file_save_interval;
+	int bag_file_save_interval_count = 0;
+	int bag_file_save_interval_step = 0;
+	int bag_file_skip_sec;
+	std::string velodyne_topic;
+
 public:
 	Mapper(ros::NodeHandle& n, ros::NodeHandle& pn);
 	~Mapper();
-	
+
 protected:
 	void gotScan(const sensor_msgs::LaserScan& scanMsgIn);
 	void gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn);
@@ -163,12 +183,12 @@ protected:
 	DP* updateMap(DP* newPointCloud, const PM::TransformationParameters T_updatedScanner_to_map, bool mapExists);
 	void waitForMapBuildingCompleted();
 	void updateIcpMap(const DP* newMapPointCloud);
-	
+
 	void publishLoop(double publishPeriod);
 	void publishTransform();
 	void loadExternalParameters();
-	
-	// Services
+
+  // Services
 	bool getPointMap(map_msgs::GetPointMap::Request &req, map_msgs::GetPointMap::Response &res);
 	bool saveMap(map_msgs::SaveMap::Request &req, map_msgs::SaveMap::Response &res);
 	bool loadMap(ethzasl_icp_mapper::LoadMap::Request &req, ethzasl_icp_mapper::LoadMap::Response &res);
@@ -185,45 +205,45 @@ Mapper::Mapper(ros::NodeHandle& n, ros::NodeHandle& pn):
 	pn(pn),
 	mapPointCloud(0),
 	transformation(PM::get().REG(Transformation).create("RigidTransformation")),
-	#if BOOST_VERSION >= 104100
-	mapBuildingInProgress(false),
-	#endif // BOOST_VERSION >= 104100
-	processingNewCloud(false),
-	publishMapTf(getParam<bool>("publishMapTf", true)),
-	useConstMotionModel(getParam<bool>("useConstMotionModel", false)),
-	localizing(getParam<bool>("localizing", true)),
-	mapping(getParam<bool>("mapping", true)),
-	inverseTransform(getParam<bool>("inverseTransform", false)),
-	minReadingPointCount(getParam<int>("minReadingPointCount", 2000)),
-	minMapPointCount(getParam<int>("minMapPointCount", 500)),
-	inputQueueSize(getParam<int>("inputQueueSize", 10)),
-	minOverlap(getParam<double>("minOverlap", 0.5)),
-	maxOverlapToMerge(getParam<double>("maxOverlapToMerge", 0.9)),
-	tfRefreshPeriod(getParam<double>("tfRefreshPeriod", 0.01)),
-	sensorFrame(getParam<string>("sensor_frame", "")),
-	odomFrame(getParam<string>("odom_frame", "odom")),
-	robotFrame(getParam<string>("robot_frame", "base_link")),
-	mapFrame(getParam<string>("map_frame", "map")),
-	finalMapName(getParam<string>("finalMapName", "finalMap.ply")),
-	filePath(getParam<string>("filePath","")),
-	mapElevation(getParam<double>("mapElevation", 0)),
-	priorDyn(getParam<double>("priorDyn", 0.5)),
-	priorStatic(1. - priorDyn),
-	maxAngle(getParam<double>("maxAngle", 0.02)),
-	eps_a(getParam<double>("eps_a", 0.05)),
-	eps_d(getParam<double>("eps_d", 0.02)),
-	alpha(getParam<double>("alpha", 0.99)),
-	beta(getParam<double>("beta", 0.99)),
-	maxDyn(getParam<double>("maxDyn", 0.95)),
-	maxDistNewPoint(pow(getParam<double>("maxDistNewPoint", 0.1),2)),
-	sensorMaxRange(getParam<double>("sensorMaxRange", 80.0)),
-	T_odom_to_map(PM::TransformationParameters::Identity(4, 4)),
-	T_robot_to_map(PM::TransformationParameters::Identity(4, 4)),
-	T_localMap_to_map(PM::TransformationParameters::Identity(4, 4)),
-	T_odom_to_scanner(PM::TransformationParameters::Identity(4, 4)),
-	publishStamp(ros::Time::now()),
-  tfListener(ros::Duration(30)),
-	eps(0.0001)
+#if BOOST_VERSION >= 104100
+      mapBuildingInProgress(false),
+#endif // BOOST_VERSION >= 104100
+      processingNewCloud(false),
+      publishMapTf(getParam<bool>("publishMapTf", true)),
+      useConstMotionModel(getParam<bool>("useConstMotionModel", false)),
+      localizing(getParam<bool>("localizing", true)),
+      mapping(getParam<bool>("mapping", true)),
+	  inverseTransform(getParam<bool>("inverseTransform", false)),
+      minReadingPointCount(getParam<int>("minReadingPointCount", 2000)),
+      minMapPointCount(getParam<int>("minMapPointCount", 500)),
+      inputQueueSize(getParam<int>("inputQueueSize", 10)),
+      minOverlap(getParam<double>("minOverlap", 0.5)),
+      maxOverlapToMerge(getParam<double>("maxOverlapToMerge", 0.9)),
+      tfRefreshPeriod(getParam<double>("tfRefreshPeriod", 0.01)),
+      sensorFrame(getParam<string>("sensor_frame", "")),
+      odomFrame(getParam<string>("odom_frame", "odom")),
+      robotFrame(getParam<string>("robot_frame", "base_link")),
+      mapFrame(getParam<string>("map_frame", "map")),
+	  finalMapName(getParam<string>("finalMapName", "finalMap.ply")),
+	  filePath(getParam<string>("filePath","")),
+      mapElevation(getParam<double>("mapElevation", 0)),
+	  priorDyn(getParam<double>("priorDyn", 0.5)),
+	  priorStatic(1. - priorDyn),
+      maxAngle(getParam<double>("maxAngle", 0.02)),
+      eps_a(getParam<double>("eps_a", 0.05)),
+      eps_d(getParam<double>("eps_d", 0.02)),
+      alpha(getParam<double>("alpha", 0.99)),
+      beta(getParam<double>("beta", 0.99)),
+      maxDyn(getParam<double>("maxDyn", 0.95)),
+      maxDistNewPoint(pow(getParam<double>("maxDistNewPoint", 0.1),2)),
+      sensorMaxRange(getParam<double>("sensorMaxRange", 80.0)),
+      T_odom_to_map(PM::TransformationParameters::Identity(4, 4)),
+      T_robot_to_map(PM::TransformationParameters::Identity(4, 4)),
+	  T_localMap_to_map(PM::TransformationParameters::Identity(4, 4)),
+	  T_odom_to_scanner(PM::TransformationParameters::Identity(4, 4)),
+      publishStamp(ros::Time::now()),
+	  tfListener(ros::Duration(30)),
+	  eps(0.0001) 
 {
 
 
@@ -232,7 +252,7 @@ Mapper::Mapper(ros::NodeHandle& n, ros::NodeHandle& pn):
 		mapping = false;
 	if(mapping == true)
 		localizing = true;
-	
+
 	// set logger
 	if (getParam<bool>("useROSLogger", false))
 		PointMatcherSupport::setLogger(new PointMatcherSupport::ROSLogger);
@@ -283,10 +303,98 @@ Mapper::Mapper(ros::NodeHandle& n, ros::NodeHandle& pn):
 		// always returns true
 		this->loadMap( req, res );
 	}
+
+	//  For Offline Bagfile mode
+	if (bag_file_mode == true) 
+	{
+
+		int percent_complete = 0, temp_percent_complete, complete_secs;
+
+		ROS_INFO_STREAM("Loading data from " << bag_filename);
+		rosbag::Bag bag;
+		bag.open(bag_filename, rosbag::bagmode::Read);
+		rosbag::View view_temp(bag);
+		ros::Time startTime = view_temp.getBeginTime();
+		startTime.sec += bag_file_skip_sec;
+		rosbag::View view(bag, rosbag::TopicQuery(velodyne_topic), startTime);
+
+		const double duration = (view.getEndTime() - startTime).toSec();
+		ROS_INFO_STREAM("Total Duration: " << duration << " seconds ");
+		for (const rosbag::MessageInstance &msg : view) {
+		// ROS_INFO_STREAM("bag_file_mode waiting for semForLoadingBag ");
+		if (!ros::ok())
+			break;
+		// sem_wait(&semForLoadingBag);
+		if (msg.isType<sensor_msgs::PointCloud2>()) // if (m.getTopic() ==
+													// velodyne_packet_topic)
+		{
+			// ROS_INFO_STREAM("bag_file_mode decode");
+			sensor_msgs::PointCloud2ConstPtr velo_point_ptr =
+				msg.instantiate<sensor_msgs::PointCloud2>();
+			if (velo_point_ptr != NULL) {
+			if (bag_file_stepping > 0 && ++bag_file_step >= bag_file_stepping) {
+				bag_file_step = 0;
+				// cin.ignore().get(); //Pause Command for Linux Terminal
+				// cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			}
+			if (++bag_file_interleave_step >= bag_file_interleave) {
+				bag_file_interleave_step = 0;
+				sensor_msgs::PointCloud2 velo_point = *velo_point_ptr;
+				ROS_INFO_STREAM(percent_complete
+								<< " % complete, " << complete_secs
+								<< "seconds of Duration: " << duration
+								<< " seconds | stamp = "
+								<< velo_point.header.stamp.toSec());
+				if (velo_point.width < 100) // even 15% random sample should give
+											// more than 15 points..  360 degree
+											// could shound have much more in
+											// general
+				{
+				bag_file_interleave_step = bag_file_interleave;
+				ROS_WARN_STREAM(
+					"skipping current point due to very small number of points "
+					<< velo_point.width
+					<< " at stamp = " << velo_point.header.stamp.toSec());
+				continue;
+				}
+
+				unique_ptr<DP> cloud(
+					new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(
+						velo_point)));
+				// processCloud(move(cloud), velo_point.header.frame_id,
+				// velo_point.header.stamp, velo_point.header.seq);
+				processCloud(move(cloud), velo_point.header.frame_id,
+							ros::Time::now(), velo_point.header.seq);
+			} // else ROS_INFO_STREAM("skipping bag_file_interleave_step
+				// "<<bag_file_interleave_step <<" bag_file_interleave
+				// "<<bag_file_interleave);
+
+			if (bag_file_save_interval > 0 &&
+				++bag_file_save_interval_step >= bag_file_save_interval) {
+				bag_file_save_interval_step = 0;
+				bag_file_save_interval_count++;
+				mapPointCloud->save(filePath + "/" +
+									std::to_string(bag_file_save_interval_count) +
+									finalMapName);
+			}
+			ros::spinOnce();
+			}
+			complete_secs = (msg.getTime() - startTime).toSec();
+			temp_percent_complete = complete_secs * 100 / duration;
+			if (temp_percent_complete >= percent_complete + 1) {
+			percent_complete = temp_percent_complete;
+			ROS_INFO_STREAM_THROTTLE(1.0, percent_complete
+												<< " % complete, " << complete_secs
+												<< "seconds of Duration: "
+												<< duration << " seconds ");
+			}
+		}
+		}
+		mapPointCloud->save(filePath + "/" + finalMapName);
+	}
 }
 
-Mapper::~Mapper()
-{
+	Mapper::~Mapper() {
 	#if BOOST_VERSION >= 104100
 	// wait for map-building thread
 	if (mapBuildingInProgress)
@@ -305,10 +413,10 @@ Mapper::~Mapper()
 		delete mapPointCloud;
 	}
 }
-
+ 
 void Mapper::gotScan(const sensor_msgs::LaserScan& scanMsgIn)
 {
-	if(localizing)
+	if(localizing && !bag_file_mode)
 	{
 		const ros::Time endScanTime(scanMsgIn.header.stamp + ros::Duration(scanMsgIn.time_increment * (scanMsgIn.ranges.size() - 1)));
 		try
@@ -330,7 +438,7 @@ void Mapper::gotScan(const sensor_msgs::LaserScan& scanMsgIn)
 
 void Mapper::gotCloud(const sensor_msgs::PointCloud2& cloudMsgIn)
 {
-	if(localizing)
+	if(localizing  && !bag_file_mode)
 	{
 		unique_ptr<DP> cloud(new DP(PointMatcher_ros::rosMsgToPointMatcherCloud<float>(cloudMsgIn)));
 		
@@ -388,7 +496,7 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 	cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
 	cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
 
-	
+
 	// Convert point cloud
 	size_t goodCount;
 	try
@@ -437,20 +545,20 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 
 	{
 		timer t; // Print how long take the algo
-		
+
 		// Apply filters to incoming cloud, in scanner coordinates
 		inputFilters.apply(*newPointCloud);
-		
+
 		ROS_INFO_STREAM("[ICP] Input filters took " << t.elapsed() << " [s]");
 	}
-	
+
 	//TODO: remove Debug Prints	
 	cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
 	cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
 
-	string reason;
-	// Initialize the transformation to identity if empty
- 	if(!icp.hasMap())
+  string reason;
+  // Initialize the transformation to identity if empty
+	if(!icp.hasMap())
  	{
 		// we need to know the dimensionality of the point cloud to initialize properly
 		publishLock.lock();
@@ -1394,6 +1502,15 @@ void Mapper::loadExternalParameters()
 	{
 		ROS_INFO_STREAM("No map post-filters config file given, not using these filters");
 	}
+
+  	//  For Offline Bagfile mode
+	pn.param<bool>("bag_file_mode", bag_file_mode, false);
+	pn.param<std::string>("velodyne_topic", velodyne_topic, "velodyne_points");
+	pn.param<std::string>("bag_filename", bag_filename, "");
+	pn.param<int>("bag_file_stepping", bag_file_stepping, 0);
+	pn.param<int>("bag_file_interleave", bag_file_interleave, 0);
+	pn.param<int>("bag_file_save_interval", bag_file_save_interval, 0);
+	pn.param<int>("bag_file_skip_sec", bag_file_skip_sec, 0);
 }
 
 bool Mapper::reloadallYaml(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res)
