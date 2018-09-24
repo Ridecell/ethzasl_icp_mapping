@@ -6,8 +6,7 @@
   <node pkg="tf" type="static_transform_publisher" name="baselink_to_velodyne"    args="1.77 0.010 2.0 0 0.21 0 base_link velodyne 100" />
   
   <!-- Dynamic mapper node-->
-  <node name="mapper" type="dynamic_mapper_offline" pkg="ethzasl_icp_mapper" output="screen">
-    <remap from="cloud_in" to="/velodyne_points" />
+  <node name="mapper" type="dynamic_mapper" pkg="ethzasl_icp_mapper" output="screen">
     <param name="localizing" value="true" />
     <param name="mapping" value="true" />
     <param name="finalMapName" value="generatedMapOffline.ply" />

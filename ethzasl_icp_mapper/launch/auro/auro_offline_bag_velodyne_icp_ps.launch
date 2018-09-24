@@ -8,8 +8,7 @@
 -->
   
   <!-- Dynamic mapper node-->
-  <node name="mapper" type="dynamic_mapper_offline" pkg="ethzasl_icp_mapper" output="screen">
-    <remap from="cloud_in" to="/velodyne_points" />
+  <node name="mapper" type="dynamic_mapper" pkg="ethzasl_icp_mapper" output="screen">
     <param name="localizing" value="true" />
     <param name="mapping" value="true" />
     <param name="finalMapName" value="ps_generatedMapOffline.ply" />
