@@ -493,8 +493,8 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 
 
 	//TODO: remove Debug Prints
-	cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
-	cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
+	//cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
+	//cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
 
 
 	// Convert point cloud
@@ -553,8 +553,8 @@ void Mapper::processCloud(unique_ptr<DP> newPointCloud, const std::string& scann
 	}
 
 	//TODO: remove Debug Prints	
-	cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
-	cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
+	//cerr << "newPointCloud->getNbPoints()" << newPointCloud->getNbPoints() << endl;
+	//cerr << "newPointCloud->times.cols()" << newPointCloud->times.cols() << endl;
 
   string reason;
   // Initialize the transformation to identity if empty
@@ -1376,8 +1376,8 @@ bool Mapper::getBoundedMap(ethzasl_icp_mapper::GetBoundedMap::Request &req, ethz
 	const float min_z = req.bottomLeftCorner.z;
 
 	//TODO: remove Debug Prints
-	cerr << "min [" << min_x << ", " << min_y << ", " << min_z << "] " << endl;
-	cerr << "max [" << max_x << ", " << max_y << ", " << max_z << "] " << endl;
+	//cerr << "min [" << min_x << ", " << min_y << ", " << min_z << "] " << endl;
+	//cerr << "max [" << max_x << ", " << max_y << ", " << max_z << "] " << endl;
 
 
 
@@ -1389,7 +1389,7 @@ bool Mapper::getBoundedMap(ethzasl_icp_mapper::GetBoundedMap::Request &req, ethz
 	//const Eigen::MatrixXf T = eigenTr.matrix().cast<float>();
 
 	//TODO: remove Debug Prints
-	cerr << "T:" << endl << T << endl;
+	//cerr << "T:" << endl << T << endl;
 	T = transformation->correctParameters(T);
 
 		
@@ -1398,7 +1398,7 @@ bool Mapper::getBoundedMap(ethzasl_icp_mapper::GetBoundedMap::Request &req, ethz
 	DP cutPointCloud = centeredPointCloud.createSimilarEmpty();
 
 	//TODO: remove Debug Prints
-	cerr << centeredPointCloud.features.topLeftCorner(3, 10) << endl;
+	//cerr << centeredPointCloud.features.topLeftCorner(3, 10) << endl;
 	cerr << T << endl;
 
 	int newPtCount = 0;
