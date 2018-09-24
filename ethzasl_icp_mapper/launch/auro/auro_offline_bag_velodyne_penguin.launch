@@ -14,9 +14,9 @@
     <param name="finalMapName" value="generatedMapOffline.ply" />
     <param name="filePath" value="/media/fast_data/Sandbox_2018/MappingLiteCopy/Penguin/" />
     <param name="subscribe_scan" value="false" />
-    <param name="subscribe_cloud" value="true" />
+    <param name="subscribe_cloud" value="false" />
     <param name="publishMapTf" value="true" />
-    <param name="useConstMotionModel" value="true" />
+    <param name="useConstMotionModel" value="false" />
     <param name="icpConfig" value="$(find ethzasl_icp_mapper)/launch/auro/icp_dynamic_outdoor.yaml" />
     <param name="inputFiltersConfig" value="$(find ethzasl_icp_mapper)/launch/auro/input_filters_outdoor.yaml" />
 <!--
@@ -31,7 +31,7 @@
     <param name="tfRefreshPeriod" value="0.005" />
     <param name="sensorMaxRange" value="100" />
     <param name="minOverlap" value="0.6" />
-    <param name="maxOverlapToMerge" value="0.9990" />
+    <param name="maxOverlapToMerge" value="0.90" />
     <param name="minReadingPointCount" value="500" />
     <param name="minMapPointCount" value="10000" />
     <!-- quick fix to have map published each time -->
@@ -44,7 +44,7 @@
     <param name="alpha" value="0.99"/>
     <param name="beta" value="0.90"/>
     <param name="maxDyn" value="0.90"/>
-    <param name="maxDistNewPoint" value="0.005" />
+    <param name="maxDistNewPoint" value="0.05" />
 
     <!-- not all params here works -->
      <param name="bag_file_mode"            value="true" />
@@ -52,8 +52,8 @@
      <param name="bag_file_interleave"      value="1" />
      <param name="bag_file_save_interval"   value="1000" />
      <param name="velodyne_topic"           value="/velodyne_points" />
-     <param name="bag_filename"            	value="/media/fast_data/Sandbox_2018/MappingLiteCopy/Penguin/2018_09_13_penguin_mapping/mapping_slow_speed/fused_points.bag" />
-     <param name="bag_file_skip_sec"        value="60" />
+     <param name="bag_filename"            	value="/media/fast_data/Sandbox_2018/MappingLiteCopy/Penguin/2018_09_13_penguin_mapping/mapping_with_center/fused_points_2018-09-13-17-57-54.bag" />
+     <param name="bag_file_skip_sec"        value="0" />
      
 
 

@@ -1,7 +1,7 @@
 - MaxDistDataPointsFilter:
-    maxDist: 80.0
+    maxDist: 100.0
 - MinDistDataPointsFilter:
-    minDist: 3.0
+    minDist: 2.0
 #- FixStepSamplingDataPointsFilter:
 #    startStep: 4
 #- RandomSamplingDataPointsFilter:

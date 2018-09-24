@@ -14,7 +14,7 @@
     <param name="finalMapName" value="kgp_generatedMapOffline.ply" />
     <param name="filePath" value="/media/fast_data/MAPPING/Maps/" />
     <param name="subscribe_scan" value="false" />
-    <param name="subscribe_cloud" value="true" />
+    <param name="subscribe_cloud" value="false" />
     <param name="publishMapTf" value="true" />
     <param name="useConstMotionModel" value="true" />
     <param name="icpConfig" value="$(find ethzasl_icp_mapper)/launch/auro/icp_dynamic_outdoor.yaml" />

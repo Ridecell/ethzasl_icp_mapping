@@ -16,9 +16,9 @@ referenceDataPointsFilters:
 
 matcher:
   KDTreeMatcher:
-    knn: 3
-    maxDist: 2.0
-    epsilon: 1
+    knn: 5
+    maxDist: 5.0
+    epsilon: 2.1
 
 outlierFilters:
   - TrimmedDistOutlierFilter:
@@ -34,13 +34,13 @@ errorMinimizer:
 
 transformationCheckers:
   - DifferentialTransformationChecker:
-      minDiffRotErr: 0.01
-      minDiffTransErr: 0.01
+      minDiffRotErr: 0.001
+      minDiffTransErr: 0.001
       smoothLength: 2
   - CounterTransformationChecker:
-      maxIterationCount: 20
+      maxIterationCount: 50
   - BoundTransformationChecker:
-      maxRotationNorm: 0.8
+      maxRotationNorm: 0.9
       maxTranslationNorm: 30.00
 
 inspector:
